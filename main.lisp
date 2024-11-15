@@ -19,7 +19,8 @@
 ;; :load-toplevel, evaled when (load "foo.fasl")
 ;; :execute, evaled whenever else e.g (load "foo.lisp")
 
-(cl:in-package "CL-USER")
+(cl:in-package "COMMON-LISP-USER")
+
 (declaim (optimize (debug 3)))
 
 (defun main ()
@@ -44,7 +45,7 @@
                    (setf (elt cl-symbols counter) (symbol-name symbol))
                    (incf counter))))))
       `(defpackage "YAM-LISP"
-         (:use "CL")
+         (:use "COMMON-LISP")
          (:export "DEFSUBST"
                   "DEFCONDITION"
                   "DEFCONST"

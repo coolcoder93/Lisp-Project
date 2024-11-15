@@ -1,7 +1,7 @@
-(cl:in-package "CL-USER")
+(cl:in-package "COMMON-LISP-USER")
 
 (defpackage "YASDF"
-  (:use "CL")
+  (:use "COMMON-LISP")
   (:export))
 
 (cl:in-package "YASDF")
