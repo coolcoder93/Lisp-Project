@@ -1,3 +1,11 @@
+;; Debugging:
+;; (disassemble) See assembly
+;; (inspect) See the symbols internals
+;; (describe) Similar to INSPECT but less interactive
+;; (trace)/(untrace) Trace to flow of a function, e.g (trace foo) (foo)
+;; (step) Step through function execution, similar to trace but interactive
+;; (break) Insert breakpoints
+;;
 ;; Profiling:
 ;; (profile foo:bar)
 ;; (foo:bar args...)
