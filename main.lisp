@@ -85,12 +85,14 @@ Examples:
 (defglobal *x* 10) ;; Bad style, *X* looks like a special variable
 (defglobal +x+ 10) ;; Bad style, +X+ looks like a constant
 (defglobal x 10)   ;; Bad style, it is unclear what X is
-(defglobal /x/ 10) ;; Good style, it is clear that /X/ is a global non-special variable"
+(defglobal /x/ 10) ;; Good style, it is clear that /X/ is a global lexical variable"
   #+sbcl `(sb-ext:defglobal ,name ,value ,documentation)
   #-sbcl `(progn
             (define-symbol-macro ,name ,value)
+            (setf (symbol-value ',name) ,value)
             ,(when documentation
-               `(setf (documentation ',name 'variable) ,documentation))))
+               `(setf (documentation ',name 'variable) ,documentation))
+            ',name))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defsubst atomp (object)
