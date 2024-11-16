@@ -5,5 +5,5 @@
 (setf sb-ext:*block-compile-default* t)
 
 (sb-ext:save-lisp-and-die +executable-name+
-                          :toplevel #'main
+                          :toplevel #'foo:main
                           :executable t)

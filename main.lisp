@@ -29,11 +29,6 @@
 
 (cl:in-package "COMMON-LISP-USER")
 
-(declaim (optimize (debug 3)))
-
-(defun main ()
-  (format t "Hello, World!~%"))
-
 (defmacro define-yam-lisp ()
   (let ((number-of-cl-symbols
           (let ((counter 0))
@@ -144,3 +139,89 @@ Examples:
                (push `(,symbol (gensym "WITH-GENSYM")) gensyms))))
       `(let (,@(collect-gensyms))
          ,@body))))
+
+(defpackage "FOO"
+  (:use "YAM-LISP")
+  (:export "MAIN"))
+
+(in-package "FOO")
+
+(sb-alien:define-alien-type glfw-window (sb-alien:* t))
+(sb-alien:define-alien-type glfw-monitor (sb-alien:* t))
+
+(sb-alien:define-alien-routine "glfwInit"
+  sb-alien:int)
+
+(sb-alien:define-alien-routine "glfwTerminate"
+  sb-alien:void)
+
+(sb-alien:define-alien-routine "glfwCreateWindow"
+  glfw-window
+  (width sb-alien:int)
+  (height sb-alien:int)
+  (title sb-alien:c-string)
+  (monitor glfw-monitor)
+  (share glfw-window))
+
+(sb-alien:define-alien-routine "glfwDestroyWindow"
+  sb-alien:void
+  (window glfw-window))
+
+(sb-alien:define-alien-routine "glfwMakeContextCurrent"
+  sb-alien:void
+  (window glfw-window))
+
+(sb-alien:define-alien-routine "glfwSwapBuffers"
+  sb-alien:void
+  (window glfw-window))
+
+(sb-alien:define-alien-routine "glfwPollEvents"
+  sb-alien:void)
+
+(sb-alien:define-alien-routine "glfwWindowShouldClose"
+  sb-alien:int
+  (window glfw-window))
+
+(defconst +glfw-true+ 1)
+(defconst +glfw-false+ 0)
+
+(defsubst window-is-open-p (window)
+  (= (glfwWindowShouldClose window) +glfw-false+))
+
+(defsubst swap-window-buffers (window)
+  (glfwSwapBuffers window))
+
+(defsubst poll-events ()
+  (glfwPollEvents))
+
+(defmacro with-engine (&body body)
+  `(progn
+     (sb-alien:load-shared-object "libglfw.so")
+     (if (= (glfwInit) +glfw-false+)
+       (error "Failed to inititalize GLFW")
+       (unwind-protect (progn ,@body)
+         (glfwTerminate)))))
+
+(defmacro with-window (window (title width height) &body body)
+  (check-type window symbol)
+  `(let ((,window (glfwCreateWindow ,width
+                                    ,height
+                                    ,title
+                                    nil
+                                    nil)))
+     (if (sb-alien:null-alien window)
+         (error "Failed to create window with GLFW")
+         (unwind-protect (progn
+                           (glfwMakeContextCurrent ,window)
+                           ,@body)
+           (glfwDestroyWindow ,window)))))
+
+(defmacro while (condition &body body)
+  `(loop :while ,condition :do (progn ,@body)))
+
+(defun main ()
+  (with-engine
+    (with-window window ("Test" 1280 720)
+      (while (window-is-open-p window)
+        (swap-window-buffers window)
+        (poll-events)))))
