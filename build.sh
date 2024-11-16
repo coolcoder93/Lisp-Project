@@ -7,5 +7,5 @@ SBCL="sbcl"
 # For release builds add:
 # --eval "(declaim (optimize (speed 2) (space 1) (debug 0) (safety 1)))" \
 set -x
-$SBCL --noinform \
+$SBCL --noinform --no-userinit \
       --load "build.lisp"
