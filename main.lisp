@@ -76,8 +76,8 @@
 
 (defmacro defconst (name value &optional documentation)
   `(cl:defconstant ,name (if (boundp ',name)
-                              (symbol-value ',name)
-                              ,value)
+                             (symbol-value ',name)
+                             ,value)
      ,documentation))
 
 (defmacro defglobal (name value &optional documentation)
@@ -155,6 +155,11 @@ Examples:
 (sb-alien:define-alien-routine "glfwTerminate"
   sb-alien:void)
 
+(sb-alien:define-alien-routine "glfwWindowHint"
+  sb-alien:void
+  (hint sb-alien:int)
+  (value sb-alien:int))
+
 (sb-alien:define-alien-routine "glfwCreateWindow"
   glfw-window
   (width sb-alien:int)
@@ -167,9 +172,9 @@ Examples:
   sb-alien:void
   (window glfw-window))
 
-(sb-alien:define-alien-routine "glfwMakeContextCurrent"
-  sb-alien:void
-  (window glfw-window))
+;; (sb-alien:define-alien-routine "glfwMakeContextCurrent"
+;;   sb-alien:void
+;;   (window glfw-window))
 
 (sb-alien:define-alien-routine "glfwSwapBuffers"
   sb-alien:void
@@ -184,6 +189,10 @@ Examples:
 
 (defconst +glfw-true+ 1)
 (defconst +glfw-false+ 0)
+(defconst +glfw-no-api+ 0)
+
+(defconst +glfw-client-api+ #x00022001)
+(defconst +glfw-resizable+ #x00020003)
 
 (defsubst window-is-open-p (window)
   (= (glfwWindowShouldClose window) +glfw-false+))
@@ -197,10 +206,12 @@ Examples:
 (defmacro with-engine (&body body)
   `(progn
      (sb-alien:load-shared-object "libglfw.so")
-     (if (= (glfwInit) +glfw-false+)
-       (error "Failed to inititalize GLFW")
-       (unwind-protect (progn ,@body)
-         (glfwTerminate)))))
+     (when (= (glfwInit) +glfw-false+)
+       (error "Failed to inititalize GLFW"))
+     (glfwWindowHint +glfw-resizable+ +glfw-false+)
+     (glfwWindowHint +glfw-client-api+ +glfw-no-api+)
+     (unwind-protect (progn ,@body)
+       (glfwTerminate))))
 
 (defmacro with-window (window (title width height) &body body)
   (check-type window symbol)
@@ -211,13 +222,13 @@ Examples:
                                     nil)))
      (if (sb-alien:null-alien window)
          (error "Failed to create window with GLFW")
-         (unwind-protect (progn
-                           (glfwMakeContextCurrent ,window)
-                           ,@body)
+         (unwind-protect (progn ,@body)
            (glfwDestroyWindow ,window)))))
 
 (defmacro while (condition &body body)
-  `(loop :while ,condition :do (progn ,@body)))
+  `(do ()
+       ((not ,condition))
+     ,@body))
 
 (defun main ()
   (with-engine
