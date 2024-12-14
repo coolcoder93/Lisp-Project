@@ -36,6 +36,9 @@
               (incf counter))))
         (shadowed-symbols #(atom
                             null
+                            delete
+                            delete-if
+                            delete-if-not
                             delete-duplicates
                             define-condition
                             defconstant)))
@@ -55,6 +58,9 @@
                   "DEFGLOBAL"
                   "ATOMP"
                   "NULLP"
+                  "NREMOVE"
+                  "NREMOVE-IF"
+                  "NREMOVE-IF-NOT"
                   "NREMOVE-DUPLICATES"
                   "WITH-GENSYMS"
                   ,@(collect-cl-symbols))))))
@@ -88,8 +94,8 @@ Variables defined using DEFGLOBAL should be surrounded by slashes
 Examples:
 (defglobal *x* 10) ;; Bad style, *X* looks like a special variable
 (defglobal +x+ 10) ;; Bad style, +X+ looks like a constant
-(defglobal x 10)   ;; Bad style, it is unclear what X is
-(defglobal /x/ 10) ;; Good style, it is clear that /X/ is a global lexical variable"
+(defglobal x 10)   ;; Bad style, unclear what X is
+(defglobal /x/ 10) ;; Good style, clear that /X/ is a global lexical variable"
   #+sbcl `(sb-ext:defglobal ,name ,value ,documentation)
   #-sbcl `(progn
             (define-symbol-macro ,name ,value)
@@ -105,6 +111,58 @@ Examples:
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defsubst nullp (object)
     (cl:null object)))
+
+(defsubst nremove (item
+                   sequence
+                   &key
+                     from-end
+                     (test #'eql)
+                     test-not
+                     (start 0)
+                     end
+                     count
+                     key)
+  (cl:delete item
+             sequence
+             :from-end from-end
+             :test test
+             :test-not test-not
+             :start start
+             :end end
+             :count count
+             :key key))
+
+(defsubst nremove-if (test
+                      sequence
+                      &key
+                        from-end
+                        (start 0)
+                        end
+                        count
+                        key)
+  (cl:delete-if test
+                sequence
+                :from-end from-end
+                :start start
+                :end end
+                :count count
+                :key key))
+
+(defsubst nremove-if-not (test
+                          sequence
+                          &key
+                            from-end
+                            (start 0)
+                            end
+                            count
+                            key)
+  (cl:delete-if-not test
+                    sequence
+                    :from-end from-end
+                    :start start
+                    :end end
+                    :count count
+                    :key key))
 
 (defsubst nremove-duplicates (sequence
                               &key
@@ -145,6 +203,8 @@ Examples:
   (:export "MAIN"))
 
 (in-package "FOO")
+
+;; TODO: Put all sb-alien: functions behind FFI interface
 
 (sb-alien:define-alien-type glfw-window (sb-alien:* t))
 (sb-alien:define-alien-type glfw-monitor (sb-alien:* t))
@@ -232,7 +292,7 @@ Examples:
 
 (defun main ()
   (with-engine
-    (with-window window ("Test" 1280 720)
-      (while (window-is-open-p window)
-        (swap-window-buffers window)
-        (poll-events)))))
+      (with-window window ("Test" 1280 720)
+        (while (window-is-open-p window)
+               (swap-window-buffers window)
+               (poll-events)))))
