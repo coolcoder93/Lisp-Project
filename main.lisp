@@ -27,7 +27,7 @@
 ;; :load-toplevel, evaled when (load "foo.fasl")
 ;; :execute, evaled whenever else e.g (load "foo.lisp")
 
-(cl:in-package "COMMON-LISP-USER")
+(cl:in-package "CL-USER")
 
 (defmacro define-yam-lisp ()
   (let ((number-of-cl-symbols
@@ -36,6 +36,8 @@
               (incf counter))))
         (shadowed-symbols #(atom
                             null
+                            set
+                            setf
                             delete
                             delete-if
                             delete-if-not
@@ -63,6 +65,7 @@
                   "NREMOVE-IF-NOT"
                   "NREMOVE-DUPLICATES"
                   "WITH-GENSYMS"
+                  "E"
                   ,@(collect-cl-symbols))))))
 
 (define-yam-lisp)
@@ -198,6 +201,8 @@ Examples:
       `(let (,@(collect-gensyms))
          ,@body))))
 
+(defconst e (exp 1))
+
 (defpackage "FOO"
   (:use "YAM-LISP")
   (:export "MAIN"))
@@ -292,7 +297,7 @@ Examples:
 
 (defun main ()
   (with-engine
-      (with-window window ("Test" 1280 720)
-        (while (window-is-open-p window)
-               (swap-window-buffers window)
-               (poll-events)))))
+    (with-window window ("Test" 1280 720)
+      (while (window-is-open-p window)
+        (swap-window-buffers window)
+        (poll-events)))))
